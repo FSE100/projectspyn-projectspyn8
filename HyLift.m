@@ -35,7 +35,7 @@ while ~goalAchieved
 
     %% DISPLAY SENSOR VALUES
     %%fprintf('US: %d  Touch: %d   R: %d  G: %d  B: %d \n',currentDist, touch, colors(1), colors(2), colors(3));
-    fprintf('old: %d current: %d change: %d threshold: %d \n',oldDist,currentDist,distDiff,distChange);
+    fprintf('old: %i current: %i change: %i threshold: %d \n',oldDist,currentDist,distDiff,distChange);
     
     %% WALL COLLISION
     %% Compares distance values for left and right paths
@@ -77,18 +77,15 @@ while ~goalAchieved
     %% Takes left turn ALWAYS
     if abs(currentDist-oldDist) > distChange
         sprintf('Left Turn Detected');
-    end
-    %{
-    if abs(currentDist-oldDist) > distChange
         stop(brick);
         left(brick,90); %% 90 degree turn
         forward(brick);
         pause(safetyTime);
     end
-    %}
+    
 
     %% DEFAULT STATE
-    forward(brick); 
+    stop(brick); 
     oldDist = currentDist;
     
 end
