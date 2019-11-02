@@ -1,12 +1,10 @@
-DisconnectBrick(brick);
-
 brick = ConnectBrick('BOTTY');
 brick.beep();
 
-touchPort = 1;
+touchPort = 4;
 colorPort = 2;
 distPort  = 3; 
-gyroPort  = 4;
+gyroPort  = 1;
 
 brick.GyroCalibrate(gyroPort);
 brick.ResetMotorAngle('C');
@@ -19,79 +17,102 @@ oldDist = brick.UltrasonicDist(distPort);
 goalAchieved = 0;
 
 %% Tolerance Values
-distChange = 50;
-colorChange = 50; 
-safetyTime = 5;
+distChange = 50;   %% sensitivity for left-turn detection
+colorChange = 50;  %% sensitivity new color detection
+safetyTime = 2;    %% time to clear a block after turning
 
 
 while ~goalAchieved
     %% GET SENSOR VALUES
     currentDist = brick.UltrasonicDist(distPort);
-    %%touch = brick.TouchPressed(touchPort);
+    touch = brick.TouchPressed(touchPort);
     colors = brick.ColorRGB(colorPort);
-    touch = 0;
+    angle = brick.GyroAngle(gyroPort);
+    batt = brick.GetBattLevel();
     
     distDiff = currentDist-oldDist;
 
     %% DISPLAY SENSOR VALUES
-    %%fprintf('US: %d  Touch: %d   R: %d  G: %d  B: %d \n',currentDist, touch, colors(1), colors(2), colors(3));
-    fprintf('old: %i current: %i change: %i threshold: %d \n',oldDist,currentDist,distDiff,distChange);
+    fprintf('currentDist: %d  Touch: %d   R: %d  G: %d  B: %d   Angle: %d Batt: %d\n',currentDist, touch, colors(1), colors(2), colors(3), angle, batt);
+    %%fprintf('old: %i current: %i change: %i threshold: %d \n',oldDist,currentDist,distDiff,distChange);
+    
+    
+    %% LEFT TURN MONITOR
+    %% Detects available left turns on the road
+    %% Takes left turn ALWAYS
+    %{
+    if abs(currentDist-oldDist) > distChange
+        sprintf('Left Turn Detected\n');
+        stop(brick);
+        left(brick,90,gyroPort); %% 90 degree turn
+        forward(brick);
+        sprintf('Clearing block...\n');
+        pause(safetyTime);
+    end
+    %}
     
     %% WALL COLLISION
     %% Compares distance values for left and right paths
     %% Moves towards longest path
+    %{
     if touch
+        fprintf('Wall Detected...\n');
         stop(brick);
-        leftDist = brick.UltrasonicDist(distPort)   %% Get left path distance
-        left(brick,180);                            %% Turn 180 degrees
+        backward(brick);
+        pause(1);
+        stop(brick);
+        
+        leftDist = brick.UltrasonicDist(distPort);   %% Get left path distance
+        fprintf('Left Path Clearance: %d \n',leftDist);
+        fprintf('Rotating 180 degrees...\n');
+        left(brick,180,gyroPort);                            %% Turn 180 degrees
         stop(brick);
         rightDist = brick.UltrasonicDist(distPort); %% Get right path distance
+        fprintf('Right Path Clearance: %d \n',rightDist);
         
         %% Orient towards longest path
         if (rightDist > leftDist)
-            left(brick,90);
+            fprintf('Right Turn Chosen\n');
+            left(brick,90,gyroPort);
         else
-            right(brick,90);
+            fprintf('Left Turn Chosen\n');
+            right(brick,90,gyroPort);
         end
         
         %% Continue forwards and exit block
         forward(brick);
+        fprintf('Clearing block...\n');
         pause(safetyTime);
-        
+        stop(brick);
+        currentDist = brick.UltrasonicDist(distPort);
     end
+    %}
     
     %% COLOR RECOGNITION AND RESPONSE
     %% Calls colorReact method to handle RGB detection
     %{
     for i=1:colors.length
         if abs(colors(i)-oldColors(i)) > colorChange
-           stop(brick);
-           colorReact(brick,i);
+            stop(brick);
+            sprintf('Color Change Detected: ');
+            colorReact(brick,i);
         end
         oldColors(i) = colors(i);
     end
     %}
     
-    %% LEFT TURN MONITOR
-    %% Detects available left turns on the road
-    %% Takes left turn ALWAYS
-    if abs(currentDist-oldDist) > distChange
-        sprintf('Left Turn Detected');
-        stop(brick);
-        left(brick,90); %% 90 degree turn
-        forward(brick);
-        pause(safetyTime);
-    end
+    
     
 
     %% DEFAULT STATE
-    stop(brick); 
+    stop(brick);
     oldDist = currentDist;
     
 end
 
 stop(brick);
 DisconnectBrick(brick);
+clear brick;
 %% END OF PROGRAM
 
 %% ACTIVATES PASSENGER MECHANISM
@@ -105,13 +126,16 @@ end
 function colorReact(brick,i)
     if i == 1               %% RED
         stop(brick);
+        sprintf('RED\n');
         pause(4);
     elseif i == 2           %% GREEN 
         stop(brick);
+        sprintf('GREEN\n');
         passenger(brick, 1);
         goalAchieved = true;
     else                    %% BLUE
         stop(brick);
+        sprintf('BLUE\n');
         passenger(brick, -1);
     end
 end
@@ -127,21 +151,31 @@ function backward(brick)
 end
 
 %% TURNS LEFT FOR GIVEN ANGLE
-function left(brick, angle)
-    endAngle = brick.GyroAngle(gyroPort) - angle;
-    while brick.GyroAngle(gryoPort) ~= endAngle
-        brick.MoveMotor('A',-50);
-        brick.MoveMotor('B',50);
+function left(brick, angle, gyroPort)
+    gyroAngle = brick.GyroAngle(gyroPort);
+    endAngle = gyroAngle - angle;
+    
+    while ~((gyroAngle < endAngle+5) && (gyroAngle>endAngle-5))
+        fprintf('Current Angle: %d   Goal: %d \n', gyroAngle, endAngle);
+        brick.MoveMotor('A',20);
+        brick.MoveMotor('B',-20);
+        gyroAngle = brick.GyroAngle(gyroPort);
     end
+    stop(brick);
 end
 
 %% TURNS RIGHT FOR GIVEN ANGLE
-function right(brick, angle)
-    endAngle = brick.GyroAngle(gyroPort) + angle;
-    while brick.GyroAngle(gryoPort) ~= endAngle
-        brick.MoveMotor('B',-50);
-        brick.MoveMotor('A',50);
+function right(brick, angle, gyroPort)
+    gyroAngle = brick.GyroAngle(gyroPort);
+    endAngle = gyroAngle + angle;
+    
+    while ~((gyroAngle < endAngle+5) && (gyroAngle>endAngle-5))
+        fprintf('Current Angle: %d   Goal: %d \n', gyroAngle, endAngle);
+        brick.MoveMotor('B',20);
+        brick.MoveMotor('A',-20);
+        gyroAngle = brick.GyroAngle(gyroPort);
     end
+    stop(brick);
 end
 
 %% STOPS ALL MOTORS
