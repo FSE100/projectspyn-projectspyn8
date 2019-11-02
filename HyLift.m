@@ -1,4 +1,6 @@
-brick = ConnectBrick('BOTTY');
+DisconnectBrick('EV3');
+
+brick = ConnectBrick('EV3');
 brick.beep();
 
 touchPort = 4;
@@ -20,7 +22,6 @@ goalAchieved = 0;
 distChange = 50;   %% sensitivity for left-turn detection
 colorChange = 50;  %% sensitivity new color detection
 safetyTime = 2;    %% time to clear a block after turning
-
 
 while ~goalAchieved
     %% GET SENSOR VALUES
@@ -90,24 +91,22 @@ while ~goalAchieved
     
     %% COLOR RECOGNITION AND RESPONSE
     %% Calls colorReact method to handle RGB detection
-    %{
-    for i=1:colors.length
-        if abs(colors(i)-oldColors(i)) > colorChange
+    
+    for i=1:3
+        val = abs(colors(i)-oldColors(i));
+        if val > colorChange
             stop(brick);
-            sprintf('Color Change Detected: ');
+            fprintf('Color Change Detected: ');
             colorReact(brick,i);
         end
         oldColors(i) = colors(i);
     end
-    %}
-    
     
     
 
     %% DEFAULT STATE
     stop(brick);
     oldDist = currentDist;
-    
 end
 
 stop(brick);
@@ -117,7 +116,7 @@ clear brick;
 
 %% ACTIVATES PASSENGER MECHANISM
 function passenger(brick, state)
-    brick.MoveMotorAngleRel('C', state * 20, 90, 'Coast');
+    brick.MoveMotorAngleRel('C', state * 20, state * 90, 'Coast');
     stop(brick);
     brick.ResetMotorAngle('C');
 end
@@ -126,16 +125,16 @@ end
 function colorReact(brick,i)
     if i == 1               %% RED
         stop(brick);
-        sprintf('RED\n');
+        fprintf('RED\n');
         pause(4);
     elseif i == 2           %% GREEN 
         stop(brick);
-        sprintf('GREEN\n');
+        fprintf('GREEN\n');
         passenger(brick, 1);
         goalAchieved = true;
     else                    %% BLUE
         stop(brick);
-        sprintf('BLUE\n');
+        fprintf('BLUE\n');
         passenger(brick, -1);
     end
 end
