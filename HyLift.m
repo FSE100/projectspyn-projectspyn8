@@ -1,6 +1,5 @@
-DisconnectBrick('EV3');
 
-brick = ConnectBrick('EV3');
+brick = ConnectBrick('HYLIFT');
 brick.beep();
 
 touchPort = 4;
