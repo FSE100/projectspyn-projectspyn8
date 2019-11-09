@@ -23,9 +23,14 @@ colorChange = 50;  %% sensitivity new color detection
 safetyTime = 3;    %% time to clear a block after turning
 leftTurnDistance = 60;
 
-
-lTurnTime = .672;
-rTurnTime = .685;
+global lTurnTime;
+global rTurnTime;
+global lSpeed;
+global rSpeed;
+lTurnTime = .67;
+rTurnTime = .682;
+lSpeed = 50;
+rSpeed = 50;
 
 while 1
 
@@ -140,10 +145,24 @@ pause(safetyTime);
 DisconnectBrick(brick);
 
 %% END OF PROGRAM
+
+%% TURNS LEFT FOR GIVEN TIME
+function leftTime(brick, time)
+    brick.MoveMotor('A',rSpeed);
+    brick.MoveMotor('B',-lSpeed);
+    pause(time);
+end
+
+function rightTime(brick, time)
+    brick.MoveMotor('A',-rSpeed);
+    brick.MoveMotor('B',lSpeed);
+    pause(time);
+end
+
 %% MOVES FORWARD
 function forward(brick)
-    brick.MoveMotor('A',40);
-    brick.MoveMotor('B',40);
+    brick.MoveMotor('A',rSpeed);
+    brick.MoveMotor('B',lSpeed);
 end
 
 function correctLeft(brick)
@@ -206,18 +225,7 @@ function left(brick, angle, gyroPort)
     stop(brick);
 end
 
-%% TURNS LEFT FOR GIVEN TIME
-function leftTime(brick, time)
-    brick.MoveMotor('A',50);
-    brick.MoveMotor('B',-50);
-    pause(time);
-end
 
-function rightTime(brick, time)
-    brick.MoveMotor('A',-50);
-    brick.MoveMotor('B',50);
-    pause(time);
-end
 
 %% TURNS RIGHT FOR GIVEN ANGLE
 function right(brick, angle, gyroPort)
