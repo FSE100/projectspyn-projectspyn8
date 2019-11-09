@@ -20,7 +20,7 @@ touch = 0;
 %% Tolerance Values
 distChange = 10;   %% sensitivity for left-turn detection
 colorChange = 50;  %% sensitivity new color detection
-safetyTime = 3;    %% time to clear a block after turning
+safetyTime = 2.5;    %% time to clear a block after turning
 leftTurnDistance = 60;
 
 global lTurnTime;
@@ -32,7 +32,7 @@ rTurnTime = .682;
 lSpeed = 50;
 rSpeed = 50;
 
-while 1
+while 0
 
     %% GET SENSOR VALUES
     currentDist = brick.UltrasonicDist(distPort);
@@ -40,14 +40,20 @@ while 1
     colors = brick.ColorRGB(colorPort);
     batt = brick.GetBattLevel();
     
+    maxColor = max(colors);
+    for i=1:3
+        if colors(i) == maxColor
+            color = i;
+        end
+    end
     
     %% DISPLAY SENSOR VALUES
-    fprintf('currentDist: %d  Touch: %d   R: %d  G: %d  B: %d   Batt: %d\n',currentDist, touch, colors(1), colors(2), colors(3), batt);
+    fprintf('currentDist: %d  Touch: %d  RGB: %d  Batt: %d\n',currentDist, touch, color, batt);
     
     
     %% KEEP LEFT
     if(currentDist>leftTurnDistance)
-        fprintf('Turning Left\n');
+        
         stop(brick);
         pause(2);
         forward(brick);
@@ -57,7 +63,7 @@ while 1
         stop(brick);
         forward(brick);
         pause(safetyTime);
-        fprintf('Turn Complete\n');
+        
     end
     %% WALL - RIGHT
     if touch
@@ -148,21 +154,25 @@ DisconnectBrick(brick);
 
 %% TURNS LEFT FOR GIVEN TIME
 function leftTime(brick, time)
-    brick.MoveMotor('A',rSpeed);
-    brick.MoveMotor('B',-lSpeed);
+    fprintf('Left Turn: %d seconds \n',time);
+    brick.MoveMotor('A',50);
+    brick.MoveMotor('B',-50);
     pause(time);
+    fprintf('Done Turn\n');
 end
 
 function rightTime(brick, time)
-    brick.MoveMotor('A',-rSpeed);
-    brick.MoveMotor('B',lSpeed);
+    fprintf('Right Turn: %d seconds\n',time);
+    brick.MoveMotor('A',-50);
+    brick.MoveMotor('B',50);
     pause(time);
+    fprintf('Done Turn\n');
 end
 
 %% MOVES FORWARD
 function forward(brick)
-    brick.MoveMotor('A',rSpeed);
-    brick.MoveMotor('B',lSpeed);
+    brick.MoveMotor('A',50);
+    brick.MoveMotor('B',50);
 end
 
 function correctLeft(brick)
