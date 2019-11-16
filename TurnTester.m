@@ -3,11 +3,11 @@ clear all;
 brick = ConnectBrick('EV3PP');
 brick.beep();
 
-global key
+global key;
 InitKeyboard();
 
-lTurnTime = .672;
-rTurnTime = .685;
+lTurnTime = .58;
+rTurnTime = .58;
 
 while true
     pause(0.01);
@@ -23,20 +23,21 @@ while true
             rightTime(brick,rTurnTime);
             stop(brick);
             pause(1);
-            
+        case 'q'
+            break;
             
     end
 end
 
 function leftTime(brick, time)
-    brick.MoveMotor('A',50);
-    brick.MoveMotor('B',-50);
+    brick.MoveMotor('A',60);
+    brick.MoveMotor('B',-60);
     pause(time);
 end
 
 function rightTime(brick, time)
-    brick.MoveMotor('A',-50);
-    brick.MoveMotor('B',50);
+    brick.MoveMotor('A',-60);
+    brick.MoveMotor('B',60);
     pause(time);
 end
 

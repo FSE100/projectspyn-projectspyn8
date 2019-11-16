@@ -1,14 +1,11 @@
-DisconnectBrick(brick);
+clear all;
 
-brick = ConnectBrick('BOTTY');
+brick = ConnectBrick('EV3PP');
 brick.beep();
 
 global key
 InitKeyboard();
 
-
-
-brick.GyroCalibrate(gyroPort);
 brick.ResetMotorAngle('C');
 
 while true
