@@ -12,11 +12,11 @@ brick.SetColorMode(colorPort,2);
 %% Initial Values
 touch = 0;
 default = 1; %Default State 1/Forward, 2/Stop
-exitProgram = 1;
+exitProgram = 1; % 1 = program runs
 global lTurnTime;
 global rTurnTime;
-lTurnTime = .58;
-rTurnTime = .58;
+lTurnTime = .59;
+rTurnTime = .575;
 colorNames = ["Black", "Blue", "Green", "Yellow", "Red", "White", "Brown", "N/A"];
 
 
