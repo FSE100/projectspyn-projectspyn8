@@ -2,27 +2,30 @@ clear all;
 
 brick = ConnectBrick('HYLIFT');
 brick.beep();
-q
-touchPort = 4;
+
+%% PORT INITIALIZATION
 colorPort = 2;
 distPort  = 3; 
+touchPort = 4;
 
 brick.SetColorMode(colorPort,2);
 
-%% Initial Values
+%% INITIAL VALUES
 touch = 0;
 default = 1; %Default State 1/Forward, 0/Stop
 exitProgram = 0; % 1 = program quits
 global lTurnTime;
 global rTurnTime;
+% Turn Calibration 
 lTurnTime = .54;
 rTurnTime = .52;
+% Color ID Index
 colorNames = ["Black", "Blue", "Green", "Yellow", "Red", "White", "Brown", "N/A"];
 
 
 %% Tolerance Values
 leftTurnDistance = 60; %% sensitivity for left-turn detection
-safetyTime = 2.5;      %% time to clear a block after turning
+safetyTime = 2.5;      %% time to clear a block after turning left
 
 while ~exitProgram
     
@@ -53,18 +56,13 @@ while ~exitProgram
     end
     
     
-    %% KEEP LEFT
+    %% KEEP LEFT - take all available left turns
     if(currentDist>leftTurnDistance)
         fprintf('Left Turn Detected\n');
-        stop(brick);
-        pause(.5);
-        
+                
         forward(brick);
-        pause(1);
-        
-        stop(brick);
         pause(.5);
-        fprintf('Turning Left\n');
+        stop(brick);
         leftTime(brick, lTurnTime);
         stop(brick);
         
@@ -73,16 +71,14 @@ while ~exitProgram
         
     end
     
-    %% WALL - RIGHT
+    %% WALL - TURN RIGHT
     if touch
         stop(brick);
         fprintf('Wall Detected... Turning Right\n');
         
         backward(brick);
- 
         pause(1);
         stop(brick);
-            pause(1);
         rightTime(brick, rTurnTime);
     end
         
