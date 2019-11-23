@@ -1,8 +1,8 @@
 clear all;
 
-brick = ConnectBrick('EV3PP');
+brick = ConnectBrick('HYLIFT');
 brick.beep();
-
+q
 touchPort = 4;
 colorPort = 2;
 distPort  = 3; 
@@ -11,12 +11,12 @@ brick.SetColorMode(colorPort,2);
 
 %% Initial Values
 touch = 0;
-default = 1; %Default State 1/Forward, 2/Stop
-exitProgram = 1; % 1 = program runs
+default = 1; %Default State 1/Forward, 0/Stop
+exitProgram = 0; % 1 = program quits
 global lTurnTime;
 global rTurnTime;
-lTurnTime = .59;
-rTurnTime = .575;
+lTurnTime = .54;
+rTurnTime = .52;
 colorNames = ["Black", "Blue", "Green", "Yellow", "Red", "White", "Brown", "N/A"];
 
 
@@ -24,9 +24,8 @@ colorNames = ["Black", "Blue", "Green", "Yellow", "Red", "White", "Brown", "N/A"
 leftTurnDistance = 60; %% sensitivity for left-turn detection
 safetyTime = 2.5;      %% time to clear a block after turning
 
-
-while exitProgram
-                   
+while ~exitProgram
+    
     %% GET SENSOR VALUES
     currentDist = brick.UltrasonicDist(distPort);
     touch = brick.TouchPressed(touchPort);
@@ -49,6 +48,8 @@ while exitProgram
         disp('Stop Light Detected\n');
         stop(brick);
         pause(4);
+        forward(brick);
+        pause(1);
     end
     
     
@@ -68,17 +69,18 @@ while exitProgram
         stop(brick);
         
         fprintf('Clearing block...\n');
-        forward(brick);
-        pause(safetyTime);
+        clearBlock(brick, safetyTime, colorPort, colorNames);
         
     end
+    
     %% WALL - RIGHT
     if touch
         stop(brick);
         fprintf('Wall Detected... Turning Right\n');
         
         backward(brick);
-            pause(1);
+ 
+        pause(1);
         stop(brick);
             pause(1);
         rightTime(brick, rTurnTime);
@@ -99,6 +101,29 @@ CloseKeyboard();
 DisconnectBrick(brick);
 
 %% END OF PROGRAM
+
+%% CLEARS BLOCK AFTER TURN
+function clearBlock(brick, safetyTime, colorPort, colorNames)
+    tic;
+    count_max = 1e9;
+    while(toc < safetyTime && toc < count_max)
+        forward(brick);
+        colorCode = brick.ColorCode(colorPort);
+        % Correct color code if unidentified
+        if colorCode==0 
+            colorCode=8; 
+        end 
+        color = colorNames(colorCode);
+        if strcmp(color,"Red")
+            disp('Stop Light Detected\n');
+            stop(brick);
+            pause(4);
+            forward(brick);
+            pause(1);
+        end
+    end
+end
+
 
 %% TURNS LEFT FOR GIVEN TIME
 function leftTime(brick, time)
@@ -141,10 +166,10 @@ function engageRemote(brick)
                 right(brick);
             case 'u' %up 
                 disp('passenger');
-                passenger(brick,1);
+                passenger(brick,-1);
             case 'd' %down
                 disp('passenger');
-                passenger(brick,-1);
+                passenger(brick,1);
             case 'q'
                 disp('Exit')
                 break;
@@ -174,12 +199,12 @@ end
 
 %% MOVES FORWARD
 function forward(brick)
-    brick.MoveMotor('AB',50);
+    brick.MoveMotor('AB',-50);
 end
 
 %% MOVES BACKWARD
 function backward(brick)
-    brick.MoveMotor('AB',-50);
+    brick.MoveMotor('AB',50);
 end
 
 %% STOPS ALL MOTORS

@@ -1,13 +1,13 @@
 clear all;
 
-brick = ConnectBrick('EV3PP');
+brick = ConnectBrick('HYLIFT');
 brick.beep();
 
 global key;
 InitKeyboard();
 
-lTurnTime = .58;
-rTurnTime = .58;
+lTurnTime = .54;
+rTurnTime = .52;
 
 while true
     pause(0.01);
