@@ -1,3 +1,5 @@
+%% HyLiftMaster Script
+
 clear all;
 
 brick = ConnectBrick('HYLIFT');
@@ -176,6 +178,7 @@ function engageRemote(brick)
     CloseKeyboard();
     disp('Returning to automated program...');
 end
+
 %% ACTIVATES PASSENGER MECHANISM
 function passenger(brick, state)
     brick.MoveMotor('C',state*20);
